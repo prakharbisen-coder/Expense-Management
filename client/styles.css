@@ -1,0 +1,183 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+}
+
+.card {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    border: none;
+}
+
+.card-header {
+    background-color: #4a6fdc;
+    color: white;
+    border-radius: 8px 8px 0 0 !important;
+    padding: 15px;
+}
+
+.btn-primary {
+    background-color: #4a6fdc;
+    border-color: #4a6fdc;
+}
+
+.btn-primary:hover {
+    background-color: #3a5bb9;
+    border-color: #3a5bb9;
+}
+
+.btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+    border-color: #218838;
+}
+
+.sidebar {
+    min-height: 100vh;
+    background-color: #343a40;
+    color: white;
+    padding-top: 20px;
+}
+
+.sidebar .nav-link {
+    color: rgba(255, 255, 255, 0.75);
+    padding: 10px 20px;
+    margin: 5px 0;
+}
+
+.sidebar .nav-link:hover {
+    color: white;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar .nav-link.active {
+    color: white;
+    background-color: #4a6fdc;
+}
+
+.main-content {
+    padding: 20px;
+}
+
+.expense-card {
+    margin-bottom: 15px;
+    transition: transform 0.2s;
+}
+
+.expense-card:hover {
+    transform: translateY(-5px);
+}
+
+.status-badge {
+    font-size: 0.8rem;
+    padding: 5px 10px;
+}
+
+.status-pending {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.status-approved {
+    background-color: #28a745;
+    color: white;
+}
+
+.status-rejected {
+    background-color: #dc3545;
+    color: white;
+}
+
+.approval-flow {
+    display: flex;
+    align-items: center;
+    margin: 15px 0;
+}
+
+.approval-step {
+    flex: 1;
+    text-align: center;
+    position: relative;
+}
+
+.approval-step::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 0;
+    width: 100%;
+    height: 2px;
+    background-color: #dee2e6;
+    z-index: 1;
+}
+
+.approval-step:last-child::after {
+    display: none;
+}
+
+.step-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #f8f9fa;
+    border: 2px solid #dee2e6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    position: relative;
+    z-index: 2;
+}
+
+.step-icon.active {
+    background-color: #4a6fdc;
+    border-color: #4a6fdc;
+    color: white;
+}
+
+.step-icon.completed {
+    background-color: #28a745;
+    border-color: #28a745;
+    color: white;
+}
+
+.step-icon.rejected {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: white;
+}
+
+.step-label {
+    margin-top: 8px;
+    font-size: 0.8rem;
+}
+
+.currency-badge {
+    font-size: 0.75rem;
+    padding: 3px 6px;
+    background-color: #e9ecef;
+    border-radius: 4px;
+    margin-left: 5px;
+}
+
+.receipt-preview {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.modal-receipt-img {
+    max-width: 100%;
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        min-height: auto;
+    }
+}

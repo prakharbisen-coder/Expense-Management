@@ -1,0 +1,1657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Reimbursement System - Demo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            background-color: white;
+        }
+        .dashboard-container {
+            display: none;
+            padding: 20px;
+        }
+        .sidebar {
+            background-color: #343a40;
+            color: white;
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 10px 20px;
+            margin: 5px 0;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        .sidebar .nav-link i {
+            margin-right: 10px;
+        }
+        .content-area {
+            padding: 20px;
+        }
+        .expense-card {
+            margin-bottom: 15px;
+            border-left: 5px solid #007bff;
+        }
+        .expense-card.approved {
+            border-left-color: #28a745;
+        }
+        .expense-card.rejected {
+            border-left-color: #dc3545;
+        }
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 5px 10px;
+        }
+        .approval-flow {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+        }
+        .approval-step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+        .approval-step::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #dee2e6;
+            z-index: 1;
+        }
+        .approval-step:last-child::after {
+            display: none;
+        }
+        .approval-step .step-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #f8f9fa;
+            border: 2px solid #dee2e6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            position: relative;
+            z-index: 2;
+        }
+        .approval-step.completed .step-icon {
+            background-color: #28a745;
+            border-color: #28a745;
+            color: white;
+        }
+        .approval-step.current .step-icon {
+            border-color: #007bff;
+            color: #007bff;
+        }
+        .approval-step.rejected .step-icon {
+            background-color: #dc3545;
+            border-color: #dc3545;
+            color: white;
+        }
+        .receipt-preview {
+            max-width: 100%;
+            max-height: 200px;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+        }
+        .currency-badge {
+            font-size: 0.8rem;
+            padding: 3px 8px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Container -->
+    <div class="login-container" id="loginContainer">
+        <h2 class="text-center mb-4">Expense Reimbursement System</h2>
+        <ul class="nav nav-tabs mb-4" id="authTabs">
+            <li class="nav-item">
+                <a class="nav-link active" id="login-tab" data-bs-toggle="tab" href="#login">Login</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="signup-tab" data-bs-toggle="tab" href="#signup">Sign Up</a>
+            </li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="login">
+                <form id="loginForm">
+                    <div class="mb-3">
+                        <label for="loginEmail" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="loginEmail" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="loginPassword" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="loginPassword" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Login</button>
+                </form>
+            </div>
+            <div class="tab-pane fade" id="signup">
+                <form id="signupForm">
+                    <div class="mb-3">
+                        <label for="signupName" class="form-label">Full Name</label>
+                        <input type="text" class="form-control" id="signupName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="signupEmail" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="signupEmail" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="signupPassword" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="signupPassword" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="companyName" class="form-label">Company Name</label>
+                        <input type="text" class="form-control" id="companyName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="country" class="form-label">Country</label>
+                        <select class="form-select" id="country" required>
+                            <option value="">Select Country</option>
+                            <option value="US">United States</option>
+                            <option value="UK">United Kingdom</option>
+                            <option value="CA">Canada</option>
+                            <option value="AU">Australia</option>
+                            <option value="JP">Japan</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Sign Up</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Container -->
+    <div class="dashboard-container" id="dashboardContainer">
+        <div class="container-fluid">
+            <div class="row">
+                <!-- Sidebar -->
+                <div class="col-md-3 col-lg-2 sidebar">
+                    <h4 class="text-center mb-4">ExpenseTracker</h4>
+                    <div class="user-info text-center mb-4">
+                        <div class="user-name" id="userNameDisplay">John Doe</div>
+                        <div class="user-role" id="userRoleDisplay">Employee</div>
+                    </div>
+                    <ul class="nav flex-column" id="sidebarMenu">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#" data-page="dashboard">
+                                <i class="bi bi-speedometer2"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-page="expenses">
+                                <i class="bi bi-receipt"></i> My Expenses
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-page="new-expense">
+                                <i class="bi bi-plus-circle"></i> New Expense
+                            </a>
+                        </li>
+                        <li class="nav-item" id="approvalsMenuItem">
+                            <a class="nav-link" href="#" data-page="approvals">
+                                <i class="bi bi-check2-circle"></i> Approvals
+                            </a>
+                        </li>
+                        <li class="nav-item" id="usersMenuItem">
+                            <a class="nav-link" href="#" data-page="users">
+                                <i class="bi bi-people"></i> Users
+                            </a>
+                        </li>
+                        <li class="nav-item" id="settingsMenuItem">
+                            <a class="nav-link" href="#" data-page="settings">
+                                <i class="bi bi-gear"></i> Settings
+                            </a>
+                        </li>
+                        <li class="nav-item mt-5">
+                            <a class="nav-link" href="#" id="logoutBtn">
+                                <i class="bi bi-box-arrow-right"></i> Logout
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Main Content Area -->
+                <div class="col-md-9 col-lg-10 content-area">
+                    <!-- Dashboard Page -->
+                    <div class="content-page" id="dashboardPage">
+                        <h2 class="mb-4">Dashboard</h2>
+                        <div class="row">
+                            <div class="col-md-4 mb-4">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Total Expenses</h5>
+                                        <h2 class="card-text">$1,250.75</h2>
+                                        <p class="text-muted">This month</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-4">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Pending Approvals</h5>
+                                        <h2 class="card-text">3</h2>
+                                        <p class="text-muted">Awaiting review</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-4">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Approved Expenses</h5>
+                                        <h2 class="card-text">12</h2>
+                                        <p class="text-muted">This month</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-8 mb-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        Recent Expenses
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="expense-card card mb-3">
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <h5 class="card-title">Business Trip to Client Site</h5>
+                                                    <span class="badge bg-warning status-badge">Pending</span>
+                                                </div>
+                                                <p class="card-text">$120.00 <span class="currency-badge">USD</span></p>
+                                                <p class="card-text text-muted">Submitted on Sep 15, 2023</p>
+                                            </div>
+                                        </div>
+                                        <div class="expense-card approved card mb-3">
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <h5 class="card-title">Office Supplies</h5>
+                                                    <span class="badge bg-success status-badge">Approved</span>
+                                                </div>
+                                                <p class="card-text">$45.75 <span class="currency-badge">USD</span></p>
+                                                <p class="card-text text-muted">Submitted on Sep 10, 2023</p>
+                                            </div>
+                                        </div>
+                                        <div class="expense-card rejected card">
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <h5 class="card-title">Team Lunch</h5>
+                                                    <span class="badge bg-danger status-badge">Rejected</span>
+                                                </div>
+                                                <p class="card-text">$85.20 <span class="currency-badge">USD</span></p>
+                                                <p class="card-text text-muted">Submitted on Sep 5, 2023</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        Expense Categories
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <div class="d-flex justify-content-between">
+                                                <span>Travel</span>
+                                                <span>$450.00</span>
+                                            </div>
+                                            <div class="progress">
+                                                <div class="progress-bar" role="progressbar" style="width: 45%"></div>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <div class="d-flex justify-content-between">
+                                                <span>Office Supplies</span>
+                                                <span>$320.50</span>
+                                            </div>
+                                            <div class="progress">
+                                                <div class="progress-bar" role="progressbar" style="width: 32%"></div>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <div class="d-flex justify-content-between">
+                                                <span>Meals</span>
+                                                <span>$280.25</span>
+                                            </div>
+                                            <div class="progress">
+                                                <div class="progress-bar" role="progressbar" style="width: 28%"></div>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div class="d-flex justify-content-between">
+                                                <span>Software</span>
+                                                <span>$200.00</span>
+                                            </div>
+                                            <div class="progress">
+                                                <div class="progress-bar" role="progressbar" style="width: 20%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Expenses Page -->
+                    <div class="content-page" id="expensesPage" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h2>My Expenses</h2>
+                            <button class="btn btn-primary" id="newExpenseBtn">
+                                <i class="bi bi-plus"></i> New Expense
+                            </button>
+                        </div>
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label for="statusFilter" class="form-label">Status</label>
+                                        <select class="form-select" id="statusFilter">
+                                            <option value="all">All</option>
+                                            <option value="pending">Pending</option>
+                                            <option value="approved">Approved</option>
+                                            <option value="rejected">Rejected</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="dateFilter" class="form-label">Date Range</label>
+                                        <select class="form-select" id="dateFilter">
+                                            <option value="all">All Time</option>
+                                            <option value="thisMonth">This Month</option>
+                                            <option value="lastMonth">Last Month</option>
+                                            <option value="thisYear">This Year</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="searchExpense" class="form-label">Search</label>
+                                        <input type="text" class="form-control" id="searchExpense" placeholder="Search expenses...">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="expense-list">
+                            <div class="expense-card card mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h5 class="card-title">Business Trip to Client Site</h5>
+                                        <span class="badge bg-warning status-badge">Pending</span>
+                                    </div>
+                                    <p class="card-text">$120.00 <span class="currency-badge">USD</span></p>
+                                    <p class="card-text text-muted">Travel • Sep 15, 2023</p>
+                                    <div class="approval-flow">
+                                        <div class="approval-step completed">
+                                            <div class="step-icon"><i class="bi bi-check"></i></div>
+                                            <div class="step-label">Submitted</div>
+                                        </div>
+                                        <div class="approval-step current">
+                                            <div class="step-icon"><i class="bi bi-person"></i></div>
+                                            <div class="step-label">Manager</div>
+                                        </div>
+                                        <div class="approval-step">
+                                            <div class="step-icon"><i class="bi bi-cash"></i></div>
+                                            <div class="step-label">Finance</div>
+                                        </div>
+                                        <div class="approval-step">
+                                            <div class="step-icon"><i class="bi bi-check-all"></i></div>
+                                            <div class="step-label">Complete</div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <button class="btn btn-sm btn-outline-primary">View Details</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="expense-card approved card mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h5 class="card-title">Office Supplies</h5>
+                                        <span class="badge bg-success status-badge">Approved</span>
+                                    </div>
+                                    <p class="card-text">$45.75 <span class="currency-badge">USD</span></p>
+                                    <p class="card-text text-muted">Office Supplies • Sep 10, 2023</p>
+                                    <div class="approval-flow">
+                                        <div class="approval-step completed">
+                                            <div class="step-icon"><i class="bi bi-check"></i></div>
+                                            <div class="step-label">Submitted</div>
+                                        </div>
+                                        <div class="approval-step completed">
+                                            <div class="step-icon"><i class="bi bi-check"></i></div>
+                                            <div class="step-label">Manager</div>
+                                        </div>
+                                        <div class="approval-step completed">
+                                            <div class="step-icon"><i class="bi bi-check"></i></div>
+                                            <div class="step-label">Finance</div>
+                                        </div>
+                                        <div class="approval-step completed">
+                                            <div class="step-icon"><i class="bi bi-check"></i></div>
+                                            <div class="step-label">Complete</div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <button class="btn btn-sm btn-outline-primary">View Details</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="expense-card rejected card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h5 class="card-title">Team Lunch</h5>
+                                        <span class="badge bg-danger status-badge">Rejected</span>
+                                    </div>
+                                    <p class="card-text">$85.20 <span class="currency-badge">USD</span></p>
+                                    <p class="card-text text-muted">Meals • Sep 5, 2023</p>
+                                    <div class="approval-flow">
+                                        <div class="approval-step completed">
+                                            <div class="step-icon"><i class="bi bi-check"></i></div>
+                                            <div class="step-label">Submitted</div>
+                                        </div>
+                                        <div class="approval-step rejected">
+                                            <div class="step-icon"><i class="bi bi-x"></i></div>
+                                            <div class="step-label">Manager</div>
+                                        </div>
+                                        <div class="approval-step">
+                                            <div class="step-icon"><i class="bi bi-cash"></i></div>
+                                            <div class="step-label">Finance</div>
+                                        </div>
+                                        <div class="approval-step">
+                                            <div class="step-icon"><i class="bi bi-check-all"></i></div>
+                                            <div class="step-label">Complete</div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <button class="btn btn-sm btn-outline-primary">View Details</button>
+                                        <button class="btn btn-sm btn-outline-secondary">Resubmit</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- New Expense Page -->
+                    <div class="content-page" id="newExpensePage" style="display: none;">
+                        <h2 class="mb-4">Submit New Expense</h2>
+                        <div class="card">
+                            <div class="card-body">
+                                <form id="newExpenseForm">
+                                    <div class="row">
+                                        <div class="col-md-12 mb-3">
+                                            <label for="expenseTitle" class="form-label">Expense Title</label>
+                                            <input type="text" class="form-control" id="expenseTitle" required placeholder="Enter a title for this expense">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="expenseCategory" class="form-label">Category</label>
+                                            <select class="form-select" id="expenseCategory" required>
+                                                <option value="">Select Category</option>
+                                                <option value="travel">Travel</option>
+                                                <option value="meals">Meals</option>
+                                                <option value="office">Office Supplies</option>
+                                                <option value="software">Software</option>
+                                                <option value="other">Other</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="expenseDate" class="form-label">Date</label>
+                                            <input type="date" class="form-control" id="expenseDate" required>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="expenseAmount" class="form-label">Amount</label>
+                                            <input type="number" step="0.01" class="form-control" id="expenseAmount" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="expenseCurrency" class="form-label">Currency</label>
+                                            <select class="form-select" id="expenseCurrency" required>
+                                                <option value="USD">USD - US Dollar</option>
+                                                <option value="EUR">EUR - Euro</option>
+                                                <option value="GBP">GBP - British Pound</option>
+                                                <option value="JPY">JPY - Japanese Yen</option>
+                                                <option value="CAD">CAD - Canadian Dollar</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="expenseDescription" class="form-label">Description</label>
+                                        <textarea class="form-control" id="expenseDescription" rows="3" required></textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="expenseReceipt" class="form-label">Receipt</label>
+                                        <input type="file" class="form-control" id="expenseReceipt" accept="image/*">
+                                        <div class="form-text">Upload a photo or scan of your receipt</div>
+                                    </div>
+                                    <div class="mb-3" id="ocrSection" style="display: none;">
+                                        <div class="card bg-light">
+                                            <div class="card-body">
+                                                <h5 class="card-title">OCR Results</h5>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <p><strong>Vendor:</strong> <span id="ocrVendor">Restaurant XYZ</span></p>
+                                                        <p><strong>Date:</strong> <span id="ocrDate">2023-09-15</span></p>
+                                                        <p><strong>Amount:</strong> <span id="ocrAmount">$78.50</span></p>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <p><strong>Category:</strong> <span id="ocrCategory">Meals</span></p>
+                                                        <p><strong>Description:</strong> <span id="ocrDescription">Business lunch</span></p>
+                                                    </div>
+                                                </div>
+                                                <button type="button" class="btn btn-sm btn-primary" id="applyOcrBtn">Apply OCR Data</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                        <button type="button" class="btn btn-secondary me-md-2" id="cancelExpenseBtn">Cancel</button>
+                                        <button type="submit" class="btn btn-primary">Submit Expense</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Approvals Page -->
+                    <div class="content-page" id="approvalsPage" style="display: none;">
+                        <h2 class="mb-4">Pending Approvals</h2>
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="approvalFilter" class="form-label">Filter By</label>
+                                        <select class="form-select" id="approvalFilter">
+                                            <option value="all">All Pending</option>
+                                            <option value="today">Submitted Today</option>
+                                            <option value="week">Submitted This Week</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="searchApproval" class="form-label">Search</label>
+                                        <input type="text" class="form-control" id="searchApproval" placeholder="Search by employee or description...">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="approval-list">
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">Business Trip to Client Site</h5>
+                                        <span class="badge bg-warning">Pending Your Approval</span>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <p><strong>Submitted By:</strong> John Smith</p>
+                                            <p><strong>Date:</strong> Sep 15, 2023</p>
+                                            <p><strong>Category:</strong> Travel</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p><strong>Amount:</strong> $120.00 <span class="currency-badge">USD</span></p>
+                                            <p><strong>Company Currency:</strong> $120.00 <span class="currency-badge">USD</span></p>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <p><strong>Description:</strong></p>
+                                        <p>Business trip to meet with client XYZ to discuss project requirements and timeline.</p>
+                                    </div>
+                                    <div class="mb-3">
+                                        <p><strong>Receipt:</strong></p>
+                                        <img src="https://via.placeholder.com/300x200?text=Receipt+Image" alt="Receipt" class="receipt-preview">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="approvalComments1" class="form-label">Comments</label>
+                                        <textarea class="form-control" id="approvalComments1" rows="2"></textarea>
+                                    </div>
+                                    <div class="d-flex justify-content-end">
+                                        <button class="btn btn-danger me-2">Reject</button>
+                                        <button class="btn btn-success">Approve</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">Software Subscription</h5>
+                                        <span class="badge bg-warning">Pending Your Approval</span>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <p><strong>Submitted By:</strong> Sarah Johnson</p>
+                                            <p><strong>Date:</strong> Sep 18, 2023</p>
+                                            <p><strong>Category:</strong> Software</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p><strong>Amount:</strong> $49.99 <span class="currency-badge">USD</span></p>
+                                            <p><strong>Company Currency:</strong> $49.99 <span class="currency-badge">USD</span></p>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <p><strong>Description:</strong></p>
+                                        <p>Monthly subscription for design software needed for client projects.</p>
+                                    </div>
+                                    <div class="mb-3">
+                                        <p><strong>Receipt:</strong></p>
+                                        <img src="https://via.placeholder.com/300x200?text=Receipt+Image" alt="Receipt" class="receipt-preview">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="approvalComments2" class="form-label">Comments</label>
+                                        <textarea class="form-control" id="approvalComments2" rows="2"></textarea>
+                                    </div>
+                                    <div class="d-flex justify-content-end">
+                                        <button class="btn btn-danger me-2">Reject</button>
+                                        <button class="btn btn-success">Approve</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Users Page (Admin Only) -->
+                    <div class="content-page" id="usersPage" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h2>User Management</h2>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                                <i class="bi bi-person-plus"></i> Add User
+                            </button>
+                        </div>
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Name</th>
+                                                <th>Email</th>
+                                                <th>Role</th>
+                                                <th>Manager</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>John Smith</td>
+                                                <td>john@example.com</td>
+                                                <td><span class="badge bg-info">Employee</span></td>
+                                                <td>Sarah Johnson</td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-primary me-1">Edit</button>
+                                                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Sarah Johnson</td>
+                                                <td>sarah@example.com</td>
+                                                <td><span class="badge bg-primary">Manager</span></td>
+                                                <td>-</td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-primary me-1">Edit</button>
+                                                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Michael Brown</td>
+                                                <td>michael@example.com</td>
+                                                <td><span class="badge bg-info">Employee</span></td>
+                                                <td>Sarah Johnson</td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-primary me-1">Edit</button>
+                                                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Emily Davis</td>
+                                                <td>emily@example.com</td>
+                                                <td><span class="badge bg-danger">Admin</span></td>
+                                                <td>-</td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-primary me-1">Edit</button>
+                                                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Settings Page -->
+                    <div class="content-page" id="settingsPage" style="display: none;">
+                        <h2 class="mb-4">Settings</h2>
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">Company Information</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <form id="companySettingsForm">
+                                            <div class="mb-3">
+                                                <label for="companyNameSetting" class="form-label">Company Name</label>
+                                                <input type="text" class="form-control" id="companyNameSetting" value="Acme Corporation">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="companyCountry" class="form-label">Country</label>
+                                                <select class="form-select" id="companyCountry">
+                                                    <option value="US" selected>United States</option>
+                                                    <option value="UK">United Kingdom</option>
+                                                    <option value="CA">Canada</option>
+                                                    <option value="AU">Australia</option>
+                                                    <option value="JP">Japan</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="companyCurrency" class="form-label">Default Currency</label>
+                                                <select class="form-select" id="companyCurrency">
+                                                    <option value="USD" selected>USD - US Dollar</option>
+                                                    <option value="EUR">EUR - Euro</option>
+                                                    <option value="GBP">GBP - British Pound</option>
+                                                    <option value="JPY">JPY - Japanese Yen</option>
+                                                    <option value="CAD">CAD - Canadian Dollar</option>
+                                                </select>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">Approval Rules</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <h6>Standard Approval</h6>
+                                                <button class="btn btn-sm btn-outline-primary">Edit</button>
+                                            </div>
+                                            <p class="mb-1"><strong>Type:</strong> Sequential</p>
+                                            <p class="mb-1"><strong>Approvers:</strong> Manager</p>
+                                        </div>
+                                        <div class="mb-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <h6>High Amount Rule</h6>
+                                                <button class="btn btn-sm btn-outline-primary">Edit</button>
+                                            </div>
+                                            <p class="mb-1"><strong>Type:</strong> Percentage</p>
+                                            <p class="mb-1"><strong>Threshold:</strong> $1,000</p>
+                                            <p class="mb-1"><strong>Percentage:</strong> 75%</p>
+                                            <p class="mb-1"><strong>Approvers:</strong> Manager, Admin</p>
+                                        </div>
+                                        <div class="mb-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <h6>CFO Override</h6>
+                                                <button class="btn btn-sm btn-outline-primary">Edit</button>
+                                            </div>
+                                            <p class="mb-1"><strong>Type:</strong> Specific Approver</p>
+                                            <p class="mb-1"><strong>Approver:</strong> Admin (CFO)</p>
+                                        </div>
+                                        <button class="btn btn-primary">Add New Rule</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">Expense Categories</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <ul class="list-group mb-3">
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                Travel
+                                                <button class="btn btn-sm btn-outline-danger">Remove</button>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                Meals
+                                                <button class="btn btn-sm btn-outline-danger">Remove</button>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                Office Supplies
+                                                <button class="btn btn-sm btn-outline-danger">Remove</button>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                Software
+                                                <button class="btn btn-sm btn-outline-danger">Remove</button>
+                                            </li>
+                                        </ul>
+                                        <div class="input-group mb-3">
+                                            <input type="text" class="form-control" placeholder="New category name">
+                                            <button class="btn btn-primary" type="button">Add</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">Account Settings</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <form id="accountSettingsForm">
+                                            <div class="mb-3">
+                                                <label for="userName" class="form-label">Name</label>
+                                                <input type="text" class="form-control" id="userName" value="Emily Davis">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="userEmail" class="form-label">Email</label>
+                                                <input type="email" class="form-control" id="userEmail" value="emily@example.com">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="currentPassword" class="form-label">Current Password</label>
+                                                <input type="password" class="form-control" id="currentPassword">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="newPassword" class="form-label">New Password</label>
+                                                <input type="password" class="form-control" id="newPassword">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                                                <input type="password" class="form-control" id="confirmPassword">
+                                            </div>
+                                            <button type="submit" class="btn btn-primary">Update Account</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add User Modal -->
+    <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addUserModalLabel">Add New User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addUserForm">
+                        <div class="mb-3">
+                            <label for="newUserName" class="form-label">Name</label>
+                            <input type="text" class="form-control" id="newUserName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="newUserEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="newUserEmail" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="newUserRole" class="form-label">Role</label>
+                            <select class="form-select" id="newUserRole" required>
+                                <option value="">Select Role</option>
+                                <option value="employee">Employee</option>
+                                <option value="manager">Manager</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <div class="mb-3" id="managerSelectDiv">
+                            <label for="newUserManager" class="form-label">Manager</label>
+                            <select class="form-select" id="newUserManager">
+                                <option value="">Select Manager</option>
+                                <option value="2">Sarah Johnson</option>
+                                <option value="4">Emily Davis</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="newUserPassword" class="form-label">Temporary Password</label>
+                            <input type="password" class="form-control" id="newUserPassword" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveUserBtn">Add User</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Demo credentials
+            const demoUsers = [
+                { email: 'admin@example.com', password: 'password123', name: 'Admin User', role: 'admin' },
+                { email: 'manager@example.com', password: 'password123', name: 'Manager User', role: 'manager' },
+                { email: 'employee@example.com', password: 'password123', name: 'Employee User', role: 'employee' }
+            ];
+
+            // Initialize demo data
+            const demoExpenses = [
+                {
+                    id: 1,
+                    title: 'Business Trip to Client Site',
+                    amount: 120.00,
+                    currency: 'USD',
+                    category: 'Travel',
+                    date: '2023-09-15',
+                    status: 'pending',
+                    submittedBy: 'Employee User',
+                    description: 'Business trip to meet with client XYZ to discuss project requirements and timeline.'
+                },
+                {
+                    id: 2,
+                    title: 'Office Supplies',
+                    amount: 45.75,
+                    currency: 'USD',
+                    category: 'Office Supplies',
+                    date: '2023-09-10',
+                    status: 'approved',
+                    submittedBy: 'Employee User',
+                    description: 'Purchased notebooks, pens, and other office supplies for the team.'
+                },
+                {
+                    id: 3,
+                    title: 'Team Lunch',
+                    amount: 85.20,
+                    currency: 'USD',
+                    category: 'Meals',
+                    date: '2023-09-05',
+                    status: 'rejected',
+                    submittedBy: 'Employee User',
+                    description: 'Team lunch to celebrate project completion.'
+                },
+                {
+                    id: 4,
+                    title: 'Software Subscription',
+                    amount: 49.99,
+                    currency: 'USD',
+                    category: 'Software',
+                    date: '2023-09-18',
+                    status: 'pending',
+                    submittedBy: 'Employee User',
+                    description: 'Monthly subscription for design software needed for client projects.'
+                }
+            ];
+
+            // Store demo data in session storage
+            if (!sessionStorage.getItem('demoExpenses')) {
+                sessionStorage.setItem('demoExpenses', JSON.stringify(demoExpenses));
+            }
+
+            // Login form submission
+            document.getElementById('loginForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const email = document.getElementById('loginEmail').value;
+                const password = document.getElementById('loginPassword').value;
+                
+                const user = demoUsers.find(u => u.email === email && u.password === password);
+                
+                if (user) {
+                    // Store user info in session
+                    sessionStorage.setItem('currentUser', JSON.stringify(user));
+                    
+                    // Update UI based on role
+                    document.getElementById('userNameDisplay').textContent = user.name;
+                    document.getElementById('userRoleDisplay').textContent = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+                    
+                    // Show/hide role-specific menu items
+                    const usersMenuItem = document.querySelector('.nav-link[data-page="users"]').parentElement;
+                    const approvalsMenuItem = document.querySelector('.nav-link[data-page="approvals"]').parentElement;
+                    const settingsMenuItem = document.querySelector('.nav-link[data-page="settings"]').parentElement;
+                    
+                    if (user.role === 'admin') {
+                        usersMenuItem.style.display = 'block';
+                        approvalsMenuItem.style.display = 'block';
+                        settingsMenuItem.style.display = 'block';
+                    } else if (user.role === 'manager') {
+                        usersMenuItem.style.display = 'none';
+                        approvalsMenuItem.style.display = 'block';
+                        settingsMenuItem.style.display = 'block';
+                    } else {
+                        usersMenuItem.style.display = 'none';
+                        approvalsMenuItem.style.display = 'none';
+                        settingsMenuItem.style.display = 'block';
+                    }
+                    
+                    // Show dashboard and activate dashboard tab
+                    document.getElementById('loginContainer').style.display = 'none';
+                    document.getElementById('dashboardContainer').style.display = 'block';
+                    
+                    // Show dashboard page and hide others
+                    document.querySelectorAll('.content-page').forEach(page => {
+                        page.style.display = 'none';
+                    });
+                    document.getElementById('dashboardPage').style.display = 'block';
+                    
+                    // Set dashboard link as active
+                    document.querySelectorAll('#sidebarMenu .nav-link').forEach(link => {
+                        link.classList.remove('active');
+                    });
+                    document.querySelector('#sidebarMenu .nav-link[data-page="dashboard"]').classList.add('active');
+                    
+                    // Load dashboard data
+                    loadDashboardData(user);
+                    loadExpensesData(user);
+                } else {
+                    alert('Invalid credentials. Please try again.\n\nDemo accounts:\n- admin@example.com / password123\n- manager@example.com / password123\n- employee@example.com / password123');
+                }
+            });
+
+            // Load dashboard data based on user role
+            function loadDashboardData(user) {
+                // Get expenses from session storage
+                const expenses = JSON.parse(sessionStorage.getItem('demoExpenses')) || [];
+                
+                // Calculate totals
+                const totalAmount = expenses.reduce((sum, expense) => sum + expense.amount, 0).toFixed(2);
+                const pendingCount = expenses.filter(e => e.status === 'pending').length;
+                const approvedCount = expenses.filter(e => e.status === 'approved').length;
+                
+                // Update dashboard cards
+                document.querySelector('.card-text:contains("$1,250.75")').textContent = '$' + totalAmount;
+                document.querySelector('.card-text:contains("3")').textContent = pendingCount;
+                document.querySelector('.card-text:contains("12")').textContent = approvedCount;
+                
+                // Update recent expenses
+                const recentExpensesContainer = document.querySelector('.card-body .expense-card').parentElement;
+                recentExpensesContainer.innerHTML = '';
+                
+                // Get 3 most recent expenses
+                const recentExpenses = [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 3);
+                
+                recentExpenses.forEach(expense => {
+                    const statusClass = expense.status === 'approved' ? 'approved' : expense.status === 'rejected' ? 'rejected' : '';
+                    const statusBadge = expense.status === 'approved' ? 'bg-success' : expense.status === 'rejected' ? 'bg-danger' : 'bg-warning';
+                    const statusText = expense.status.charAt(0).toUpperCase() + expense.status.slice(1);
+                    
+                    const expenseCard = `
+                        <div class="expense-card ${statusClass} card mb-3">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5 class="card-title">${expense.title}</h5>
+                                    <span class="badge ${statusBadge} status-badge">${statusText}</span>
+                                </div>
+                                <p class="card-text">$${expense.amount.toFixed(2)} <span class="currency-badge">${expense.currency}</span></p>
+                                <p class="card-text text-muted">Submitted on ${expense.date}</p>
+                            </div>
+                        </div>
+                    `;
+                    
+                    recentExpensesContainer.innerHTML += expenseCard;
+                });
+            }
+
+            // Load expenses data
+            function loadExpensesData(user) {
+                // Get expenses from session storage
+                const expenses = JSON.parse(sessionStorage.getItem('demoExpenses')) || [];
+                
+                // Update expenses list
+                const expenseListContainer = document.querySelector('.expense-list');
+                expenseListContainer.innerHTML = '';
+                
+                expenses.forEach(expense => {
+                    const statusClass = expense.status === 'approved' ? 'approved' : expense.status === 'rejected' ? 'rejected' : '';
+                    const statusBadge = expense.status === 'approved' ? 'bg-success' : expense.status === 'rejected' ? 'bg-danger' : 'bg-warning';
+                    const statusText = expense.status.charAt(0).toUpperCase() + expense.status.slice(1);
+                    
+                    // Create approval flow based on status
+                    let approvalFlow = '';
+                    if (expense.status === 'pending') {
+                        approvalFlow = `
+                            <div class="approval-flow">
+                                <div class="approval-step completed">
+                                    <div class="step-icon"><i class="bi bi-check"></i></div>
+                                    <div class="step-label">Submitted</div>
+                                </div>
+                                <div class="approval-step current">
+                                    <div class="step-icon"><i class="bi bi-person"></i></div>
+                                    <div class="step-label">Manager</div>
+                                </div>
+                                <div class="approval-step">
+                                    <div class="step-icon"><i class="bi bi-cash"></i></div>
+                                    <div class="step-label">Finance</div>
+                                </div>
+                                <div class="approval-step">
+                                    <div class="step-icon"><i class="bi bi-check-all"></i></div>
+                                    <div class="step-label">Complete</div>
+                                </div>
+                            </div>
+                        `;
+                    } else if (expense.status === 'approved') {
+                        approvalFlow = `
+                            <div class="approval-flow">
+                                <div class="approval-step completed">
+                                    <div class="step-icon"><i class="bi bi-check"></i></div>
+                                    <div class="step-label">Submitted</div>
+                                </div>
+                                <div class="approval-step completed">
+                                    <div class="step-icon"><i class="bi bi-check"></i></div>
+                                    <div class="step-label">Manager</div>
+                                </div>
+                                <div class="approval-step completed">
+                                    <div class="step-icon"><i class="bi bi-check"></i></div>
+                                    <div class="step-label">Finance</div>
+                                </div>
+                                <div class="approval-step completed">
+                                    <div class="step-icon"><i class="bi bi-check"></i></div>
+                                    <div class="step-label">Complete</div>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        approvalFlow = `
+                            <div class="approval-flow">
+                                <div class="approval-step completed">
+                                    <div class="step-icon"><i class="bi bi-check"></i></div>
+                                    <div class="step-label">Submitted</div>
+                                </div>
+                                <div class="approval-step rejected">
+                                    <div class="step-icon"><i class="bi bi-x"></i></div>
+                                    <div class="step-label">Manager</div>
+                                </div>
+                                <div class="approval-step">
+                                    <div class="step-icon"><i class="bi bi-cash"></i></div>
+                                    <div class="step-label">Finance</div>
+                                </div>
+                                <div class="approval-step">
+                                    <div class="step-icon"><i class="bi bi-check-all"></i></div>
+                                    <div class="step-label">Complete</div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    const expenseCard = `
+                        <div class="expense-card ${statusClass} card mb-3" data-expense-id="${expense.id}">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5 class="card-title">${expense.title}</h5>
+                                    <span class="badge ${statusBadge} status-badge">${statusText}</span>
+                                </div>
+                                <p class="card-text">$${expense.amount.toFixed(2)} <span class="currency-badge">${expense.currency}</span></p>
+                                <p class="card-text text-muted">${expense.category} • ${expense.date}</p>
+                                ${approvalFlow}
+                                <div class="mt-3">
+                                    <button class="btn btn-sm btn-outline-primary view-expense-btn">View Details</button>
+                                    ${expense.status === 'rejected' ? '<button class="btn btn-sm btn-outline-secondary resubmit-expense-btn">Resubmit</button>' : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    expenseListContainer.innerHTML += expenseCard;
+                });
+                
+                // Add event listeners to view expense buttons
+                document.querySelectorAll('.view-expense-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const expenseId = parseInt(this.closest('.expense-card').getAttribute('data-expense-id'));
+                        const expense = expenses.find(e => e.id === expenseId);
+                        
+                        if (expense) {
+                            alert(`Expense Details:\n\nTitle: ${expense.title}\nAmount: $${expense.amount.toFixed(2)} ${expense.currency}\nCategory: ${expense.category}\nDate: ${expense.date}\nStatus: ${expense.status}\nDescription: ${expense.description}`);
+                        }
+                    });
+                });
+                
+                // Add event listeners to resubmit buttons
+                document.querySelectorAll('.resubmit-expense-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const expenseId = parseInt(this.closest('.expense-card').getAttribute('data-expense-id'));
+                        const expense = expenses.find(e => e.id === expenseId);
+                        
+                        if (expense) {
+                            expense.status = 'pending';
+                            sessionStorage.setItem('demoExpenses', JSON.stringify(expenses));
+                            alert('Expense resubmitted successfully!');
+                            loadExpensesData(JSON.parse(sessionStorage.getItem('currentUser')));
+                            loadDashboardData(JSON.parse(sessionStorage.getItem('currentUser')));
+                        }
+                    });
+                });
+                
+                // Load approvals data if user is manager or admin
+                if (user.role === 'manager' || user.role === 'admin') {
+                    loadApprovalsData();
+                }
+            }
+            
+            // Load approvals data
+            function loadApprovalsData() {
+                // Get expenses from session storage
+                const expenses = JSON.parse(sessionStorage.getItem('demoExpenses')) || [];
+                
+                // Get pending expenses
+                const pendingExpenses = expenses.filter(e => e.status === 'pending');
+                
+                // Update approvals list
+                const approvalListContainer = document.querySelector('.approval-list');
+                if (!approvalListContainer) {
+                    console.error('Approval list container not found');
+                    return;
+                }
+                
+                approvalListContainer.innerHTML = '';
+                
+                if (pendingExpenses.length === 0) {
+                    approvalListContainer.innerHTML = '<div class="alert alert-info">No pending approvals.</div>';
+                    return;
+                }
+                
+                pendingExpenses.forEach(expense => {
+                    const approvalCard = `
+                        <div class="card mb-4" data-expense-id="${expense.id}">
+                            <div class="card-header">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">${expense.title}</h5>
+                                    <span class="badge bg-warning">Pending Your Approval</span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <p><strong>Submitted By:</strong> ${expense.submittedBy}</p>
+                                        <p><strong>Date:</strong> ${expense.date}</p>
+                                        <p><strong>Category:</strong> ${expense.category}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Amount:</strong> $${expense.amount.toFixed(2)} <span class="currency-badge">${expense.currency}</span></p>
+                                        <p><strong>Company Currency:</strong> $${expense.amount.toFixed(2)} <span class="currency-badge">${expense.currency}</span></p>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <p><strong>Description:</strong></p>
+                                    <p>${expense.description}</p>
+                                </div>
+                                <div class="mb-3">
+                                    <p><strong>Receipt:</strong></p>
+                                    <img src="https://via.placeholder.com/300x200?text=Receipt+Image" alt="Receipt" class="receipt-preview">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="approvalComments${expense.id}" class="form-label">Comments</label>
+                                    <textarea class="form-control" id="approvalComments${expense.id}" rows="2"></textarea>
+                                </div>
+                                <div class="d-flex justify-content-end">
+                                    <button class="btn btn-danger me-2 reject-expense-btn">Reject</button>
+                                    <button class="btn btn-success approve-expense-btn">Approve</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    approvalListContainer.innerHTML += approvalCard;
+                });
+                
+                // Add event listeners to approve buttons
+                document.querySelectorAll('.approve-expense-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const expenseId = parseInt(this.closest('.card').getAttribute('data-expense-id'));
+                        const expenses = JSON.parse(sessionStorage.getItem('demoExpenses')) || [];
+                        const expense = expenses.find(e => e.id === expenseId);
+                        
+                        if (expense) {
+                            expense.status = 'approved';
+                            sessionStorage.setItem('demoExpenses', JSON.stringify(expenses));
+                            alert('Expense approved successfully!');
+                            loadApprovalsData();
+                            
+                            // Reload other data that might be affected
+                            const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+                            loadDashboardData(currentUser);
+                        }
+                    });
+                });
+                
+                // Add event listeners to reject buttons
+                document.querySelectorAll('.reject-expense-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const expenseId = parseInt(this.closest('.card').getAttribute('data-expense-id'));
+                        const expenses = JSON.parse(sessionStorage.getItem('demoExpenses')) || [];
+                        const expense = expenses.find(e => e.id === expenseId);
+                        
+                        if (expense) {
+                            expense.status = 'rejected';
+                            sessionStorage.setItem('demoExpenses', JSON.stringify(expenses));
+                            alert('Expense rejected successfully!');
+                            loadApprovalsData();
+                            
+                            // Reload other data that might be affected
+                            const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+                            loadDashboardData(currentUser);
+                        }
+                    });
+                });
+            }
+
+            // Signup form submission (demo only)
+            document.getElementById('signupForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const name = document.getElementById('signupName').value;
+                const email = document.getElementById('signupEmail').value;
+                const password = document.getElementById('signupPassword').value;
+                const company = document.getElementById('companyName').value;
+                
+                // In a real app, this would send data to the server
+                alert(`Sign up successful!\n\nName: ${name}\nEmail: ${email}\nCompany: ${company}\n\nIn a real app, this would create a new account. For this demo, please use the provided demo credentials.`);
+                
+                // Reset form
+                document.getElementById('signupForm').reset();
+                
+                // Switch to login tab
+                document.getElementById('login-tab').click();
+            });
+
+            // Navigation
+            document.querySelectorAll('#sidebarMenu .nav-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Remove active class from all links
+                    document.querySelectorAll('#sidebarMenu .nav-link').forEach(l => {
+                        l.classList.remove('active');
+                    });
+                    
+                    // Add active class to clicked link
+                    this.classList.add('active');
+                    
+                    // Hide all content pages
+                    document.querySelectorAll('.content-page').forEach(page => {
+                        page.style.display = 'none';
+                    });
+                    
+                    // Show selected page
+                    const pageId = this.getAttribute('data-page') + 'Page';
+                    const pageElement = document.getElementById(pageId);
+                    if (pageElement) {
+                        pageElement.style.display = 'block';
+                        
+                        // Load specific data for certain pages
+                        const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+                        if (pageId === 'approvalsPage' && (currentUser.role === 'manager' || currentUser.role === 'admin')) {
+                            loadApprovalsData();
+                        } else if (pageId === 'expensesPage') {
+                            loadExpensesData(currentUser);
+                        } else if (pageId === 'dashboardPage') {
+                            loadDashboardData(currentUser);
+                        }
+                    } else {
+                        console.error('Page not found:', pageId);
+                    }
+                });
+            });
+
+            // New Expense button
+            document.getElementById('newExpenseBtn').addEventListener('click', function() {
+                // Hide all content pages
+                document.querySelectorAll('.content-page').forEach(page => {
+                    page.style.display = 'none';
+                });
+                
+                // Show new expense page
+                document.getElementById('newExpensePage').style.display = 'block';
+                
+                // Update sidebar active link
+                document.querySelectorAll('#sidebarMenu .nav-link').forEach(l => {
+                    l.classList.remove('active');
+                });
+                document.querySelector('#sidebarMenu .nav-link[data-page="new-expense"]').classList.add('active');
+            });
+
+            // Cancel expense button
+            document.getElementById('cancelExpenseBtn').addEventListener('click', function() {
+                // Go back to expenses page
+                document.querySelectorAll('.content-page').forEach(page => {
+                    page.style.display = 'none';
+                });
+                document.getElementById('expensesPage').style.display = 'block';
+                
+                // Update sidebar active link
+                document.querySelectorAll('#sidebarMenu .nav-link').forEach(l => {
+                    l.classList.remove('active');
+                });
+                document.querySelector('#sidebarMenu .nav-link[data-page="expenses"]').classList.add('active');
+                
+                // Reset form
+                document.getElementById('newExpenseForm').reset();
+                document.getElementById('ocrSection').style.display = 'none';
+            });
+
+            // OCR demo functionality
+            document.getElementById('expenseReceipt').addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    // In a real app, this would upload the file and process OCR
+                    // For demo, we'll just show the OCR section with mock data
+                    document.getElementById('ocrSection').style.display = 'block';
+                }
+            });
+
+            // Apply OCR data button
+            document.getElementById('applyOcrBtn').addEventListener('click', function() {
+                document.getElementById('expenseAmount').value = '78.50';
+                document.getElementById('expenseDate').value = '2023-09-15';
+                document.getElementById('expenseCategory').value = 'meals';
+                document.getElementById('expenseDescription').value = 'Business lunch at Restaurant XYZ';
+            });
+
+            // New expense form submission
+            document.getElementById('newExpenseForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Get form values
+                const title = document.getElementById('expenseTitle').value;
+                const category = document.getElementById('expenseCategory').value;
+                const date = document.getElementById('expenseDate').value;
+                const amount = parseFloat(document.getElementById('expenseAmount').value);
+                const currency = document.getElementById('expenseCurrency').value;
+                const description = document.getElementById('expenseDescription').value;
+                
+                // Validate form
+                if (!title || !category || !date || isNaN(amount) || amount <= 0 || !currency) {
+                    alert('Please fill in all required fields with valid values.');
+                    return;
+                }
+                
+                // Get current user
+                const user = JSON.parse(sessionStorage.getItem('currentUser'));
+                
+                // Get expenses from session storage
+                const expenses = JSON.parse(sessionStorage.getItem('demoExpenses')) || [];
+                
+                // Create new expense
+                const newExpense = {
+                    id: expenses.length > 0 ? Math.max(...expenses.map(e => e.id)) + 1 : 1,
+                    title: title,
+                    amount: amount,
+                    currency: currency,
+                    category: category,
+                    date: date,
+                    status: 'pending',
+                    submittedBy: user.name,
+                    description: description
+                };
+                
+                // Add to expenses
+                expenses.push(newExpense);
+                
+                // Save to session storage
+                sessionStorage.setItem('demoExpenses', JSON.stringify(expenses));
+                
+                alert('Expense submitted successfully!');
+                
+                // Go back to expenses page
+                document.querySelectorAll('.content-page').forEach(page => {
+                    page.style.display = 'none';
+                });
+                document.getElementById('expensesPage').style.display = 'block';
+                
+                // Update sidebar active link
+                document.querySelectorAll('#sidebarMenu .nav-link').forEach(l => {
+                    l.classList.remove('active');
+                });
+                document.querySelector('#sidebarMenu .nav-link[data-page="expenses"]').classList.add('active');
+                
+                // Reset form
+                document.getElementById('newExpenseForm').reset();
+                document.getElementById('ocrSection').style.display = 'none';
+                
+                // Reload expenses data
+                loadExpensesData(user);
+                loadDashboardData(user);
+            });
+
+            // Logout button
+            document.getElementById('logoutBtn').addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Clear session
+                sessionStorage.removeItem('currentUser');
+                
+                // Show login page
+                document.getElementById('dashboardContainer').style.display = 'none';
+                document.getElementById('loginContainer').style.display = 'block';
+                
+                // Clear form fields
+                document.getElementById('loginEmail').value = '';
+                document.getElementById('loginPassword').value = '';
+            });
+
+            // Role-based UI for new user form
+            document.getElementById('newUserRole').addEventListener('change', function() {
+                if (this.value === 'employee') {
+                    document.getElementById('managerSelectDiv').style.display = 'block';
+                } else {
+                    document.getElementById('managerSelectDiv').style.display = 'none';
+                }
+            });
+
+            // Add user button
+            document.getElementById('saveUserBtn').addEventListener('click', function() {
+                const name = document.getElementById('newUserName').value;
+                const email = document.getElementById('newUserEmail').value;
+                const role = document.getElementById('newUserRole').value;
+                
+                if (!name || !email || !role) {
+                    alert('Please fill in all required fields.');
+                    return;
+                }
+                
+                alert(`User ${name} (${email}) added successfully with role: ${role}!`);
+                
+                // Reset form
+                document.getElementById('addUserForm').reset();
+                
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('addUserModal'));
+                modal.hide();
+            });
+
+            // Initialize Bootstrap tabs
+            document.getElementById('login-tab').addEventListener('click', function(e) {
+                e.preventDefault();
+                document.getElementById('login').classList.add('show', 'active');
+                document.getElementById('signup').classList.remove('show', 'active');
+                this.classList.add('active');
+                document.getElementById('signup-tab').classList.remove('active');
+            });
+            
+            document.getElementById('signup-tab').addEventListener('click', function(e) {
+                e.preventDefault();
+                document.getElementById('signup').classList.add('show', 'active');
+                document.getElementById('login').classList.remove('show', 'active');
+                this.classList.add('active');
+                document.getElementById('login-tab').classList.remove('active');
+            });
+
+            // Check if user is already logged in
+            const storedUser = sessionStorage.getItem('currentUser');
+            if (storedUser) {
+                const user = JSON.parse(storedUser);
+                
+                // Update UI based on role
+                document.getElementById('userNameDisplay').textContent = user.name;
+                document.getElementById('userRoleDisplay').textContent = user.role;
+                
+                // Show/hide role-specific menu items
+                if (user.role === 'admin') {
+                    document.getElementById('usersMenuItem').style.display = 'block';
+                    document.getElementById('approvalsMenuItem').style.display = 'block';
+                    document.getElementById('settingsMenuItem').style.display = 'block';
+                } else if (user.role === 'manager') {
+                    document.getElementById('usersMenuItem').style.display = 'none';
+                    document.getElementById('approvalsMenuItem').style.display = 'block';
+                    document.getElementById('settingsMenuItem').style.display = 'block';
+                } else {
+                    document.getElementById('usersMenuItem').style.display = 'none';
+                    document.getElementById('approvalsMenuItem').style.display = 'none';
+                    document.getElementById('settingsMenuItem').style.display = 'none';
+                }
+                
+                // Show dashboard
+                document.getElementById('loginContainer').style.display = 'none';
+                document.getElementById('dashboardContainer').style.display = 'block';
+                
+                // Load dashboard data
+                loadDashboardData(user);
+                loadExpensesData(user);
+            }
+            
+            // Add event listener for company settings form
+            document.getElementById('companySettingsForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                alert('Company settings updated successfully!');
+            });
+            
+            // Add event listener for account settings form
+            document.getElementById('accountSettingsForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                alert('Account settings updated successfully!');
+            });
+            
+            // Add event listeners for expense filters
+            document.getElementById('statusFilter').addEventListener('change', function() {
+                alert('Filter applied! In a real app, this would filter the expenses list.');
+            });
+            
+            document.getElementById('dateFilter').addEventListener('change', function() {
+                alert('Filter applied! In a real app, this would filter the expenses list.');
+            });
+            
+            document.getElementById('searchExpense').addEventListener('input', function() {
+                alert('Search applied! In a real app, this would search the expenses list.');
+            });
+            
+            // Add event listeners for approval filters
+            document.getElementById('approvalFilter').addEventListener('change', function() {
+                alert('Filter applied! In a real app, this would filter the approvals list.');
+            });
+            
+            document.getElementById('searchApproval').addEventListener('input', function() {
+                alert('Search applied! In a real app, this would search the approvals list.');
+            });
+        });
+    </script>
+</body>
+</html>
